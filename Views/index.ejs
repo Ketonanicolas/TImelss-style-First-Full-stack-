@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeless Tailors - Home</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<header class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="#">Timeless Tailors</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
+               
+            </ul>
+        </div>
+    </div>
+</header>
+
+<section class="hero">
+    <h1>Welcome to Timeless Tailors</h1>
+    <p>Discover the finest collection of tailored suits, blazers, and formal wear for every occasion.</p>
+    <a href="#products" class="btn btn-primary btn-lg">Shop Now</a>
+</section>
+
+<!-- Carousel Section -->
+<main>
+  <div class=" container">
+  <div id="myCarousel" class="carousel slide mb-6" data-bs-ride="carousel">
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#myCarousel" data-bs-slide-to="0" class="active" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#myCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+        <button type="button" data-bs-target="#myCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+    </div>
+    <div class="carousel-inner">
+        <div class="carousel-item active">
+            <img src="/Public/pic/download.jpg" class="d-block w-100" alt="Elegant Suits">
+            <div class="container">
+                <div class="carousel-caption text-start">
+                    <h1>Timeless Elegance</h1>
+                    <p>Explore our collection of world-class suits and formal wear.</p>
+                </div>
+            </div>
+        </div>
+        <div class="carousel-item">
+            <img src="/Public/pic/tailor.jpg" class="d-block w-100" alt="Expert Tailoring">
+            <div class="container">
+                <div class="carousel-caption">
+                    <h1>Expert Customization</h1>
+                    <p>Our skilled tailors ensure your perfect fit and unique style.</p>
+                </div>
+            </div>
+        </div>
+        <div class="carousel-item">
+            <img src="/Public/pic/woman.jpg" class="d-block w-100" alt="Modern Styles">
+            <div class="container">
+                <div class="carousel-caption text-end">
+                    <h1>Modern Styles for Everyone</h1>
+                    <p>Stay ahead with our fashionable and versatile designs.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#myCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#myCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+  </div>
+</div>
+<div class="review">
+  <h2 class="text-center mb-4">Reviews</h2>
+</div>
+<!--some revies-->
+<div class="container-lg">
+  <div class="row g-4" style="margin-left: 15%;">
+<div class="card" style="width: 18rem;">
+  <div class="card-body">
+    <h5 class="card-title">Robert Petinson</h5>
+    <h6 class="card-subtitle mb-2 text-body-secondary">★★★⯪☆</h6>
+    <p class="card-text">Amazing suits and Amzing coustumer servers</p>
+  </div>
+</div>
+
+  <div class="card" style="width: 18rem;">
+    <div class="card-body">
+      <h5 class="card-title">Bella Hadid</h5>
+      <h6 class="card-subtitle mb-2 text-body-secondary">★★★★★</h6>
+      <p class="card-text">I love the matrial and the collection is amazing, as well as the staff</p>
+    </div>
+  </div>
+
+  <div class="card" style="width: 18rem;">
+    <div class="card-body">
+      <h5 class="card-title">Tom Holland</h5>
+      <h6 class="card-subtitle mb-2 text-body-secondary">★★★☆☆</h6>
+      <p class="card-text">Good collection but i feel they can add little more variety in matrial</p>
+    </div>
+  </div>
+  <a href="#">show all reviews</a>
+  
+
+  </div>
+</div>
+  <!-- Product Section -->
+  <div class="container">
+    <h2 class="text-center mb-4">Product List</h2>
+    <div class="row g-4" id="products">
+        <% products.forEach(product => { %>
+          <div class="col-md-4 col-sm-6">
+            <div class="card" style="width: 100%; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);">
+                <img src="/<%= product.imagePath %>" class="card-img-top" alt="<%= product.name %>" style="height: 250px; object-fit: cover;">
+                <div class="card-body">
+                    <h5 class="card-title"><%= product.name %></h5>
+                    <p class="card-text"><%= product.description %></p>
+                    <p><strong>Price:</strong> $<%= product.price %></p>
+                </div>
+            </div>
+          </div>
+        <% }); %>
+    </div>
+  </div>
+</main>
+
+<footer>
+    <p>&copy; 2025 Timeless Tailors. All Rights Reserved.</p>
+    <p>
+        <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a>
+    </p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
