@@ -1,90 +1,163 @@
-const express = require('express');
-const mysql = require('mysql2');
-const bodyParser = require('body-parser');
-const multer = require('multer');
-const path = require('path');
+import express from 'express';
+import mysql from 'mysql2/promise';
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
+const port = 3000;
 
-app.use(bodyParser.urlencoded({ extended: true }));
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
-app.use(express.static('uploads'));  // Serve images from the 'uploads' folder
 app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
-// Set up multer storage for image uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-      cb(null, 'uploads/'); // Save files in the 'uploads' folder
+// Configure multer for image uploads
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
   },
-  filename: (req, file, cb) => {
-      cb(null, Date.now() + '-' + file.originalname); // Rename file to avoid conflicts
-  }
 });
-const upload = multer({ storage: storage });
 
-// Connect to MySQL database
-const db = mysql.createConnection({
+// Database configuration
+const pool = mysql.createPool({
   host: 'localhost',
-  user: 'root',
-  password: 'Harsh123@sql',
-  database: 'product_management'
+  user: 'root', // replace with your MySQL username
+  password: 'Harsh123@sql', // replace with your MySQL password
+  database: 'product_management', // replace with your database name
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
 });
 
-db.connect(err => {
-  if (err) throw err;
-  console.log('Connected to database');
-});
+// Test database connection
+pool.getConnection()
+  .then((connection) => {
+    console.log('Database connected successfully');
+    connection.release();
+  })
+  .catch((err) => {
+    console.error('Error connecting to the database:', err);
+  });
 
 // Routes
-app.get('/', (req, res) => {
-  const query = 'SELECT * FROM products';
-  db.query(query, (err, results) => {
-    if (err) throw err;
-    res.render('index', { products: results });
-  });
+
+// Home page to display products
+app.get('/', async (req, res) => {
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    const [products] = await connection.execute(
+      'SELECT id, name, description, price, imagePath IS NOT NULL AS hasImage FROM products'
+    );
+    res.render('index', { products });
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    res.status(500).render('error', { error: 'Error fetching products. Please try again later.' });
+  } finally {
+    if (connection) connection.release();
+  }
 });
 
-app.get('/admin', (req, res) => {
-  const query = 'SELECT * FROM products';
-  db.query(query, (err, results) => {
-    if (err) throw err;
-    res.render('admin', { products: results });
-  });
+// Fetch image for a product by ID
+app.get('/image/:id', async (req, res) => {
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    const [rows] = await connection.execute('SELECT imagePath FROM products WHERE id = ?', [
+      req.params.id,
+    ]);
+    if (rows.length > 0 && rows[0].imagePath) {
+      res.contentType('image/jpeg');
+      res.send(rows[0].imagePath);
+    } else {
+      res.status(404).send('Image not found');
+    }
+  } catch (error) {
+    console.error('Error fetching image:', error);
+    res.status(500).send('Error fetching image');
+  } finally {
+    if (connection) connection.release();
+  }
 });
 
-// Add a product (with image)
-app.post('/add', upload.single('image'), (req, res) => {
-  const { name, price, description } = req.body;
-  const imagePath = '/uploads/' + req.file.filename; // Fixed path
+// Admin page to manage products
+app.get('/admin', async (req, res) => {
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    const [products] = await connection.execute(
+      'SELECT id, name, description, price, imagePath IS NOT NULL AS hasImage FROM products'
+    );
+    res.render('admin', { products });
+  } catch (error) {
+    console.error('Error fetching products for admin page:', error);
+    res.status(500).render('error', { error: 'Error loading admin page. Please try again later.' });
+  } finally {
+    if (connection) connection.release();
+  }
+});
 
-  const query = 'INSERT INTO products (name, description, price, imagePath) VALUES (?, ?, ?, ?)';
-  db.query(query, [name, description, price, imagePath], (err) => {
-    if (err) throw err;
+// Add a new product
+app.post('/upload', upload.single('image'), async (req, res) => {
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    const { name, description, price } = req.body;
+
+    if (!req.file) {
+      throw new Error('No image uploaded');
+    }
+
+    const imageBuffer = req.file.buffer;
+
+    await connection.execute(
+      'INSERT INTO products (name, description, imagePath, price) VALUES (?, ?, ?, ?)',
+      [name, description, imageBuffer, price]
+    );
+
     res.redirect('/admin');
-  });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).render('error', { error: 'Error uploading product: ' + error.message });
+  } finally {
+    if (connection) connection.release();
+  }
 });
 
-// Delete a product
-app.post('/delete/:id', (req, res) => {
-  const id = req.params.id;
-  const query = 'DELETE FROM products WHERE id = ?';
-  db.query(query, [id], (err) => {
-    if (err) throw err;
-    res.redirect('/admin');  // Redirect to homepage after deleting a product
-  });
+// Delete a product by ID
+app.post('/delete/:id', async (req, res) => {
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.execute('DELETE FROM products WHERE id = ?', [req.params.id]);
+    res.redirect('/admin');
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    res.status(500).render('error', { error: 'Error deleting product. Please try again later.' });
+  } finally {
+    if (connection) connection.release();
+  }
 });
 
-// About page route
+// About page
 app.get('/about', (req, res) => {
   res.render('about');
 });
 
-// Contact page route
+// Contact page
 app.get('/contact', (req, res) => {
   res.render('contact');
 });
 
-app.use('/Public', express.static(path.join(__dirname, 'Public')));
-
-
-app.listen(3000, () => console.log('Server running on http://localhost:3000')); 
+// Start server
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});

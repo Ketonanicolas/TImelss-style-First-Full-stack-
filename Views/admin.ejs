@@ -37,7 +37,8 @@
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
         }
         form input,
-        form button {
+        form button,
+        form textarea {
             width: 100%;
             margin: 10px 0;
         }
@@ -68,6 +69,12 @@
             justify-content: space-between;
             align-items: center;
         }
+        ul img {
+            max-width: 50px;
+            max-height: 50px;
+            margin-right: 10px;
+            border-radius: 5px;
+        }
         footer {
             background-color: #343a40;
             color: #ffffff;
@@ -77,7 +84,7 @@
     </style>
 </head>
 <body>
-   
+
 <header>
     <div class="container">
         <h1>Admin - Manage Products</h1>
@@ -86,7 +93,7 @@
 </header>
 
 <main>
-    <form action="/add" method="POST" enctype="multipart/form-data">
+    <form action="/upload" method="POST" enctype="multipart/form-data">
         <div class="mb-3">
             <label for="productName" class="form-label">Product Name</label>
             <input type="text" class="form-control" id="productName" name="name" required>
@@ -97,7 +104,7 @@
         </div>
         <div class="mb-3">
             <label for="productPrice" class="form-label">Product Price</label>
-            <input type="number" class="form-control" id="productPrice" name="price" required>
+            <input type="number" class="form-control" id="productPrice" name="price" step="0.01" required>
         </div>
         <div class="mb-3">
             <label for="productImage" class="form-label">Product Image</label>
@@ -109,7 +116,13 @@
     <ul>
         <% products.forEach(product => { %>
             <li>
-                <%= product.name %>: $<%= product.price %>
+                <% if (product.hasImage) { %>
+                    <img src="/image/<%= product.id %>" alt="<%= product.name %>">
+                <% } %>
+                <div>
+                    <strong><%= product.name %></strong>: $<%= product.price %><br>
+                    <small><%= product.description %></small>
+                </div>
                 <form action="/delete/<%= product.id %>" method="POST" style="display:inline;">
                     <button class="btn btn-danger btn-sm" type="submit">Delete</button>
                 </form>
